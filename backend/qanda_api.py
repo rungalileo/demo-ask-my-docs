@@ -112,7 +112,7 @@ def create_evaluation_workflow(question: str, answer: str, prompt: str, relevant
     metric_to_scorer = {
         'correctness': pq.Scorers.correctness,
         'context_adherence': pq.Scorers.context_adherence_plus,
-        'instruction_adherence': pq.Scorers.instruction_adherence,
+        'instruction_adherence': pq.Scorers.instruction_adherence_plus,
         'chunk_attribution': pq.Scorers.chunk_attribution_utilization_luna,
         'toxic_content': pq.Scorers.toxicity,
         'tone': pq.Scorers.tone,
