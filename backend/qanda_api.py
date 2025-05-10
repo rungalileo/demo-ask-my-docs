@@ -15,7 +15,10 @@ from pdf_reader import extract_and_chunk_text
 from llm_utils import ask_openai, get_embeddings
 import sys
 import os
+from dotenv import load_dotenv
+
 sys.path.append(os.path.dirname(__file__))
+load_dotenv()
 
 # Initialize promptquality and observe
 print("Logging in to Galileo...")
