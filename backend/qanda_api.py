@@ -22,15 +22,8 @@ load_dotenv()
 
 # Initialize promptquality and observe
 print("Logging in to Galileo...")
-pq.login("https://console.dev.rungalileo.io/")
-GALILEO_PROJECT_NAME = 'pdf_qa_evaluations'
-# GALILEO_OBSERVE_PROJECT = 'pdf_qa_observe'
-
-# Set Galileo Observe configuration
-os.environ['GALILEO_CONSOLE_URL'] = 'https://console.dev.rungalileo.io/'
-
-# Initialize observe workflows
-# observe_workflows = ObserveWorkflows(project_name=GALILEO_OBSERVE_PROJECT)
+pq.login(os.getenv("GALILEO_CONSOLE_URL"))
+GALILEO_PROJECT_NAME = os.getenv("GALILEO_PROJECT_NAME")
 
 app = FastAPI(
     title="PDF Q&A API",
