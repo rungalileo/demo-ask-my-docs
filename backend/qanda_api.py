@@ -6,13 +6,11 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 import uvicorn
 import promptquality as pq
-from promptquality import EvaluateRun, Document, Message, MessageRole, Models
+from promptquality import EvaluateRun, Document, Message, MessageRole, Models, CustomizedScorerName
 from galileo_observe import ObserveWorkflows
 import threading
 import shutil
 from typing import Optional, Tuple
-
-# Import functions from other modules
 from pdf_reader import extract_and_chunk_text
 from llm_utils import ask_openai, get_embeddings
 
@@ -20,13 +18,13 @@ from llm_utils import ask_openai, get_embeddings
 print("Logging in to Galileo...")
 pq.login("https://console.dev.rungalileo.io/")
 GALILEO_PROJECT_NAME = 'pdf_qa_evaluations'
-GALILEO_OBSERVE_PROJECT = 'pdf_qa_observe'
+# GALILEO_OBSERVE_PROJECT = 'pdf_qa_observe'
 
 # Set Galileo Observe configuration
 os.environ['GALILEO_CONSOLE_URL'] = 'https://console.dev.rungalileo.io/'
 
 # Initialize observe workflows
-observe_workflows = ObserveWorkflows(project_name=GALILEO_OBSERVE_PROJECT)
+# observe_workflows = ObserveWorkflows(project_name=GALILEO_OBSERVE_PROJECT)
 
 app = FastAPI(
     title="PDF Q&A API",
@@ -108,9 +106,11 @@ def finish_evaluation(evaluate_run):
 
 def create_evaluation_workflow(question: str, answer: str, prompt: str, relevant_chunks: list, metrics: list[str]) -> EvaluateRun:
     """Create and configure an evaluation workflow"""
-    # Map metric names to their corresponding scorers
+
+    correctness_gpt41 = pq.CustomizedChainPollScorer(scorer_name=pq.CustomizedScorerName.correctness, model_alias=pq.Models.gpt_4_1)
+
     metric_to_scorer = {
-        'correctness': pq.Scorers.correctness,
+        'correctness': correctness_gpt41, # pq.Scorers.correctness,
         'context_adherence': pq.Scorers.context_adherence_plus,
         'instruction_adherence': pq.Scorers.instruction_adherence_plus,
         'chunk_attribution': pq.Scorers.chunk_attribution_utilization_luna,
@@ -119,7 +119,6 @@ def create_evaluation_workflow(question: str, answer: str, prompt: str, relevant
         'completeness': pq.Scorers.completeness_plus
     }
     
-    # Convert metrics to scorers, defaulting to all if none specified
     scorers = [metric_to_scorer[metric] for metric in metrics] if metrics else list(metric_to_scorer.values())
     
     evaluate_run = EvaluateRun(
@@ -137,7 +136,8 @@ def create_evaluation_workflow(question: str, answer: str, prompt: str, relevant
     # Log the retriever step
     wf.add_retriever(
         input=question,
-        documents=[Document(content=chunk, metadata={"length": len(chunk)}) for chunk in relevant_chunks],
+        documents=[
+            Document(content=chunk, metadata={"length": len(chunk)}) for chunk in relevant_chunks],
         duration_ns=1000
     )
 
@@ -154,35 +154,35 @@ def create_evaluation_workflow(question: str, answer: str, prompt: str, relevant
 
     return evaluate_run
 
-def create_observe_workflow(question: str, answer: str, prompt: str, relevant_chunks: list):
-    """Create and configure an observe workflow"""
-    # Log to Observe
-    observe_wf = observe_workflows.add_workflow(
-        input=question,
-        output=answer,
-        duration_ns=2000
-    )
+# def create_observe_workflow(question: str, answer: str, prompt: str, relevant_chunks: list):
+#     """Create and configure an observe workflow"""
+#     # Log to Observe
+#     observe_wf = observe_workflows.add_workflow(
+#         input=question,
+#         output=answer,
+#         duration_ns=2000
+#     )
     
-    # Log the retriever step to Observe
-    observe_wf.add_retriever(
-        input=question,
-        documents=[Document(content=chunk, metadata={"length": len(chunk)}) for chunk in relevant_chunks],
-        duration_ns=1000
-    )
+#     # Log the retriever step to Observe
+#     observe_wf.add_retriever(
+#         input=question,
+#         documents=[Document(content=chunk, metadata={"length": len(chunk)}) for chunk in relevant_chunks],
+#         duration_ns=1000
+#     )
     
-    # Log the LLM step to Observe
-    observe_wf.add_llm(
-        input=Message(content=prompt, role=MessageRole.user),
-        output=Message(content=answer, role=MessageRole.assistant),
-        model=Models.chat_gpt,
-        input_tokens=len(prompt.split()),
-        output_tokens=len(answer.split()),
-        total_tokens=len(prompt.split()) + len(answer.split()),
-        duration_ns=1000
-    )
+#     # Log the LLM step to Observe
+#     observe_wf.add_llm(
+#         input=Message(content=prompt, role=MessageRole.user),
+#         output=Message(content=answer, role=MessageRole.assistant),
+#         model=Models.chat_gpt,
+#         input_tokens=len(prompt.split()),
+#         output_tokens=len(answer.split()),
+#         total_tokens=len(prompt.split()) + len(answer.split()),
+#         duration_ns=1000
+#     )
     
-    # Upload the observation
-    observe_workflows.upload_workflows()
+#     # Upload the observation
+#     observe_workflows.upload_workflows()
 
 # --- API Endpoint ---
 @app.post("/ask_pdf", summary="Ask a question about the PDF")
@@ -237,19 +237,22 @@ async def ask_pdf_endpoint(request: QuestionRequest):
         # Create and run evaluation workflow only if offline_evaluation is True
         if offline_evaluation:
             evaluate_run = create_evaluation_workflow(question, answer, prompt, relevant_chunks, metrics)
+
             evaluation_thread = threading.Thread(
                 target=finish_evaluation,
                 args=(evaluate_run,)
             )
+
             evaluation_thread.start()
 
         # Create observe workflow
-        create_observe_workflow(question, answer, prompt, relevant_chunks)
+        # create_observe_workflow(question, answer, prompt, relevant_chunks)
 
         return {"question": question, "answer": answer}
 
     except Exception as e:
-        print(f"An error occurred during API call: {e}")
+        print("Prompt Quality Version: ", pq.__version__)
+        print(f"The exception we get is: {e}")
         raise HTTPException(status_code=500, detail=f"An internal error occurred: {e}")
 
 # --- Run the API (for local development) ---

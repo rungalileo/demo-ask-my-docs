@@ -7,6 +7,7 @@ from promptquality import Scorers
 from promptquality import SupportedModels
 from datetime import datetime
 from dotenv import load_dotenv
+from galileo_observe import ObserveWorkflows
 import os
 
 load_dotenv()
@@ -69,3 +70,15 @@ for i in range(len(dataset["input"])):
     )
 
 evaluate_run.finish()
+
+
+
+## Observe
+
+workflows = ObserveWorkflows(project_name="<project_name>")
+
+# Copy paste evaluate code and replace my_run with workflows
+
+# on evaluate you do my_run.finish() to upload
+# on observe you do workflows.upload_workflows()
+workflows.upload_workflows()
