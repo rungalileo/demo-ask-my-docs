@@ -4,7 +4,9 @@
 pip install --break-system-packages -r backend/requirements.txt
 
 # Start FastAPI backend
+cd backend
 uvicorn backend.qanda_api:app --host 0.0.0.0 --port 8000 &
+cd ..
 
 # Start frontend with Vite
 cd frontend
