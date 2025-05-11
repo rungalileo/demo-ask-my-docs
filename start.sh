@@ -11,4 +11,5 @@ cd ..
 # Start frontend (Vite)
 cd frontend
 npm install
-npm run dev -- --host 0.0.0.0 --port $PORT
+export PORT=80
+npm run dev -- --host 0.0.0.0
