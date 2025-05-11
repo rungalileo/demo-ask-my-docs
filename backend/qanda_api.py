@@ -22,11 +22,11 @@ load_dotenv()
 
 # Initialize promptquality and observe
 print("Logging in to Galileo...")
-pq.login(os.getenv("GALILEO_CONSOLE_URL"))
+pq.login(api_key=os.getenv("GALILEO_API_KEY"))
 GALILEO_PROJECT_NAME = os.getenv("GALILEO_PROJECT_NAME")
 
 app = FastAPI(
-    title="PDF Q&A API",
+    title=GALILEO_PROJECT_NAME,
     description="API to ask questions about a specific PDF document."
 )
 
