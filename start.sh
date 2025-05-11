@@ -1,15 +1,16 @@
 #!/bin/bash
 
-# Install Python dependencies
+# Install Python deps
 pip install --break-system-packages -r backend/requirements.txt
 
-# Start FastAPI backend in background
-cd backend
-nohup uvicorn qanda_api:app --host 0.0.0.0 --port 8001 > backend.log 2>&1 &
-cd ..
 
-# Start frontend (Vite)
+# Start frontend with Vite
 cd frontend
 npm install
-export PORT=80
-npm run dev -- --host 0.0.0.0
+npm run dev
+cd ..
+
+# Start FastAPI backend
+cd backend
+uvicorn qanda_api:app --host 0.0.0.0 --port 8000 &
+
