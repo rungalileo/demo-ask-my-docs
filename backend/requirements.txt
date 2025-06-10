@@ -7,6 +7,6 @@ promptquality==1.11.1
 pydantic==2.11.4
 pypdf==5.4.0
 python-dotenv==1.1.0
-Requests==2.32.3
+Requests==2.32.4
 scikit_learn==1.6.1
 uvicorn==0.34.2
