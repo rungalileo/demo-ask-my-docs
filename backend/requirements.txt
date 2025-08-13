@@ -5,7 +5,7 @@ openai==1.78.0
 pandas==2.2.3
 promptquality==1.11.1
 pydantic==2.11.4
-pypdf==5.4.0
+pypdf==6.0.0
 python-dotenv==1.1.0
 Requests==2.32.3
 scikit_learn==1.6.1
